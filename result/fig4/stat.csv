@@ -1,0 +1,4 @@
+"exp","pvalue","p0","p1","nctrl","nexp"
+"Numeber of posterior Vsx1 (E(z) RNAi, neuronal)",2.3636762941523e-120,0.0364598941164719,0.129964152667463,3,4
+"Normalized distance of all Vsx1 (E(z) RNAi, neuronal)",8.97825969497816e-27,0.68141114041133,0.726786005224232,3,4
+"Normalized distance of ectopic Vsx1 (E(z) RNAi, neuronal)",1.63899195673465e-05,0.72614793245139,0.795235498672639,3,4
