@@ -88,57 +88,57 @@ def standardize(mat, dims=(0, 1)):
 
 sample_metadata = OrderedDict([
     ('LacZ_1', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': -155,
         'roi_path': 'data/LacZ_1_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/LacZ_1_Hoechst_Dimm_Fs.tif',
         'condition': 'LacZ OE'
     }),
     ('LacZ_2', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': 50,
         'roi_path': 'data/LacZ_2_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/LacZ_2_Hoechst_Dimm_Fs.tif',
         'condition': 'LacZ OE'
     }),
     ('LacZ_3', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': -140,
         'roi_path': 'data/LacZ_3_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/LacZ_3_Hoechst_Dimm_Fs.tif',
         'condition': 'LacZ OE'
     }),
     ('Bi_1', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': 75,
         'roi_path': 'data/Bi_1_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/Bi_1_Hoechst_Dimm_Fs.tif',
         'condition': 'Bi OE'
     }),
     ('Bi_2', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': -70,
         'roi_path': 'data/Bi_2_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/Bi_2_Hoechst_Dimm_Fs.tif',
         'condition': 'Bi OE'
     }),
     ('Bi_3', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
         'rotation': -130,
         'roi_path': 'data/Bi_3_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/Bi_3_Hoechst_Dimm_Fs.tif',
         'condition': 'Bi OE'
     }),
     ('Bi_4', {
-        'dimm_thres': 17500,
-        'fs_thres': 7500,
-        'rotation': 20,
+        'dimm_thres': 10000,
+        'fs_thres': 5000,
+        'rotation': -90,
         'roi_path': 'data/Bi_4_Hoechst_Dimm_Fs_cp_masks.tif',
         'signal_path': 'data/Bi_4_Hoechst_Dimm_Fs.tif',
         'condition': 'Bi OE'

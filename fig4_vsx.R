@@ -25,11 +25,12 @@ ttbl <- res_tbl[, .(N = .N, ect_N = sum(ectopic)), by = c("sample", "type")]
 stat_tbl <- list()
 
 ## Posterior abundance
-tobj <- glm(ect_N / N ~ type, data = ttbl, family = binomial, weights = N)
+tobj <- glm(ect_N / N ~ type, data = ttbl, family = quasibinomial, weights = N)
 
 tsobj <- summary(tobj)
 beta0 <- tsobj$coefficients[1, 1]
 beta1 <- tsobj$coefficients[2, 1]
+phi <- tsobj$dispersion
 p0 <- 1 / (1 + exp(-beta0))
 p1 <- 1 / (1 + exp(-beta0 - beta1))
 
@@ -39,7 +40,8 @@ stat_tbl[["posterior_ectopic"]] <- data.table(
   p0 = p0,
   p1 = p1,
   nctrl = 3,
-  nexp = 4
+  nexp = 4,
+  phi = phi
 )
 
 ## Temporal bias
@@ -52,7 +54,8 @@ stat_tbl[["all_radial"]] <- data.table(
   p0 = tsobj$coefficients[1, 1],
   p1 = tsobj$coefficients[2, 1] + tsobj$coefficients[1, 1],
   nctrl = 3,
-  nexp = 4
+  nexp = 4,
+  phi = NA
 )
 
 tobj <- lm(r ~ type + sample, data = res_tbl[ectopic == TRUE])
@@ -63,7 +66,8 @@ stat_tbl[["ectopic_radial"]] <- data.table(
   p0 = tsobj$coefficients[1, 1],
   p1 = tsobj$coefficients[2, 1] + tsobj$coefficients[1, 1],
   nctrl = 3,
-  nexp = 4
+  nexp = 4,
+  phi = NA
 )
 
 write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
