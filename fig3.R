@@ -24,6 +24,7 @@ res_tbl$cell <- factor(res_tbl$cell, levels = c("Pm4 (Run)", "Mi4 (Ct/Run)"))
 res_tbl[in_plane == TRUE & type == "LacZ OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -32,12 +33,15 @@ ggplot(aes(x_std, y_std, color = cell)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Mi4-Ctrl.pdf", width = 4, height = 4)
 
 res_tbl[in_plane == TRUE & type == "Vsx1 OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -46,6 +50,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Mi4-OE.pdf", width = 4, height = 4)
 
@@ -69,28 +75,25 @@ ggsave("./result/fig3/Vsx1-GOF-Mi4-legend.pdf", get_legend(p))
 ttbl <- res_tbl[
   x_std > 0, .(total = .N, Mi4 = sum(cell == "Mi4 (Ct/Run)")),
   by = c("type", "sample")
-]
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
 ttbl |>
-  ggplot(aes(x = type, y = Mi4 / total, color = type)) +
+  ggplot(aes(x = type_n, y = Mi4 / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
   annotate(
-    "segment", x = 1, xend = 2, y = 0.7, yend = 0.7, color = "black"
+    "segment", x = 1, xend = 2, y = 0.55, yend = 0.55, color = "black"
   ) +
   annotate(
-    "text", x = 1.5, y = 0.72, label = "*", color = "black", size = 6
+    "text", x = 1.5, y = 0.57, label = "*", color = "black", size = 6
   ) +
-  labs(y = "# Mi4 (Ct/Run) / Total (All Run+)") +
+  labs(y = "# Anterior Mi4 (Ct/Run)\n/ Total (All Anterior Run+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (4)", "Vsx1 OE (4)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
@@ -137,11 +140,14 @@ res_tbl$cell <- factor(res_tbl$cell, levels = c("Pm4 (Run)", "Mi4 (Ct/Run)"))
 res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
@@ -151,11 +157,14 @@ ggsave("./result/fig3/Vsx1-LOF-Mi4-Ctrl.pdf", width = 4, height = 4)
 res_tbl[in_plane == TRUE & type == "Vsx1/2 RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
@@ -165,6 +174,7 @@ ggsave("./result/fig3/Vsx1-LOF-Mi4-KD.pdf", width = 4, height = 4)
 p <- res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -182,10 +192,10 @@ ggsave("./result/fig3/Vsx1-LOF-Mi4-legend.pdf", get_legend(p))
 ttbl <- res_tbl[
   x_std > 0, .(total = .N, Mi4 = sum(cell == "Mi4 (Ct/Run)")),
   by = c("type", "sample")
-]
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
 ttbl |>
-  ggplot(aes(x = type, y = Mi4 / total, color = type)) +
+  ggplot(aes(x = type_n, y = Mi4 / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -196,14 +206,11 @@ ttbl |>
   annotate(
     "text", x = 1.5, y = 0.72, label = "*", color = "black", size = 6
   ) +
-  labs(y = "# Mi4 (Ct/Run) / Total (All Run+)") +
+  labs(y = "# Anterior Mi4 (Ct/Run)\n/ Total (All Anterior Run+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("mCherry RNAi (3)", "Vsx1/2 RNAi (3)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
@@ -259,6 +266,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
@@ -273,6 +282,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#1B9E77", "#7570B3")
   ) +
@@ -299,10 +310,10 @@ ggsave("./result/fig3/Vsx1-GOF-Tm5e-legend.pdf", get_legend(p))
 ttbl <- res_tbl[
   , .(total = .N, Tm29_et_al = sum(cell == "Tm29/33/TmY5a (Ey/Kn/D)")),
   by = c("type", "sample")
-]
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
 ttbl |>
-  ggplot(aes(x = type, y = Tm29_et_al / total, color = type)) +
+  ggplot(aes(x = type_n, y = Tm29_et_al / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -319,9 +330,6 @@ ttbl |>
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
   ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (3)", "Vsx1 OE (3)")
-  ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
     values = c("#435274", "#ba3c3c")
@@ -331,7 +339,8 @@ ttbl |>
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.6, height = 3.55)
 
 tobj <- glm(
-  Tm29_et_al / total ~ type, data = ttbl, family = quasibinomial, weights = total
+  Tm29_et_al / total ~ type, data = ttbl,
+  family = quasibinomial, weights = total
 )
 tsobj <- summary(tobj)
 beta0 <- tsobj$coefficients[1, 1]
@@ -375,6 +384,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#D95F02", "#7570B3", "grey80")
   ) +
@@ -389,6 +400,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#D95F02", "#7570B3", "grey80")
   ) +
@@ -415,10 +428,12 @@ ggsave("./result/fig3/Bi-GOF-Dm-legend.pdf", get_legend(p))
 ttbl_dm8 <- res_tbl[
   , .(total = .N, Dm8 = sum(cell == "Dm8 (Dac+/Tj, ventral)")),
   by = c("type", "sample")
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
 ]
 
 qdm8 <- ttbl_dm8 |>
-  ggplot(aes(x = type, y = Dm8 / total, color = type)) +
+  ggplot(aes(x = type_n, y = Dm8 / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -438,9 +453,6 @@ qdm8 <- ttbl_dm8 |>
     plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (3)", "Bi OE (3)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
@@ -470,10 +482,12 @@ stat_tbl[["Bi-GOF-Dm (Dm8)"]] <- data.frame(
 ttbl_dra <- res_tbl[
   , .(total = .N, DmDRA = sum(cell == "Dm-DRA (Dac+/Tj, dorsal)")),
   by = c("type", "sample")
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
 ]
 
 qdra <- ttbl_dra |>
-  ggplot(aes(x = type, y = DmDRA / total, color = type)) +
+  ggplot(aes(x = type_n, y = DmDRA / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -493,9 +507,6 @@ qdra <- ttbl_dra |>
     plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (3)", "Bi OE (3)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
@@ -542,6 +553,7 @@ res_tbl$cell <- factor(res_tbl$cell, levels = c("TE (Dimm+/Fs+)", "Other"))
 res_tbl[cell == "TE (Dimm+/Fs+)" & type == "LacZ OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   scale_x_continuous(limits = c(-1, 1)) +
   scale_y_continuous(limits = c(-1, 1)) +
@@ -558,6 +570,9 @@ ggsave("./result/fig3/Bi-GOF-TE-Ctrl.pdf", width = 4, height = 4)
 res_tbl[cell == "TE (Dimm+/Fs+)" & type == "Bi OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -578,6 +593,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.text = element_blank(),
     legend.position = "bottom"
   ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
     values = c("#D95F02", "#7570B3")
   ) +
@@ -589,10 +606,12 @@ ggsave("./result/fig3/Bi-GOF-TE-legend.pdf", get_legend(p))
 ttbl <- res_tbl[
   , .(total = .N, TE = sum(cell == "TE (Dimm+/Fs+)")),
   by = c("type", "sample")
-]
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
+  ]
 
 ttbl |>
-  ggplot(aes(x = type, y = TE / total, color = type)) +
+  ggplot(aes(x = type_n, y = TE / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -602,9 +621,6 @@ ttbl |>
   theme(
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (3)", "Bi OE (3)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
@@ -634,12 +650,14 @@ stat_tbl[["Bi-GOF-TE (Whole OL)"]] <- data.frame(
 )
 
 ttbl <- res_tbl[
-  , .(total = .N, ant_TE = sum(cell == "TE (Dimm+/Fs+)" & x_std > 0)),
+  x_std > 0, .(total = .N, ant_TE = sum(cell == "TE (Dimm+/Fs+)")),
   by = c("type", "sample")
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
 ]
 
 ttbl |>
-  ggplot(aes(x = type, y = ant_TE / total, color = type)) +
+  ggplot(aes(x = type_n, y = ant_TE / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -655,9 +673,6 @@ ttbl |>
   theme(
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("LacZ OE (3)", "Bi OE (3)")
   ) +
   scale_y_continuous(limits = c(0, NA), labels = scales::number_format()) +
   scale_color_manual(
