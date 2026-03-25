@@ -21,7 +21,11 @@ res_tbl$type <- factor(
 res_tbl[, ectopic := x_std < 0]
 
 # Statistics
-ttbl <- res_tbl[, .(N = .N, ect_N = sum(ectopic)), by = c("sample", "type")]
+ttbl <- res_tbl[, .(N = .N, ect_N = sum(ectopic)), by = c("sample", "type")][
+  , type_n := paste0(type, " (n = ", .N, ")"), by = type
+][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
+]
 stat_tbl <- list()
 
 ## Posterior abundance
@@ -76,6 +80,8 @@ write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
 res_tbl[type == "mCherry RNAi"] |>
   ggplot(aes(x = x_std, y = y_std)) +
   geom_point(color = "#435274", size = 0.5) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -87,6 +93,8 @@ ggsave("./result/fig4/Ez-LOF-Vsx1-Ctrl.pdf", width = 4, height = 4)
 res_tbl[type == "E(z) RNAi"] |>
   ggplot(aes(x = x_std, y = y_std)) +
   geom_point(color = "#ba3c3c", size = 0.5) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -96,7 +104,7 @@ res_tbl[type == "E(z) RNAi"] |>
 ggsave("./result/fig4/Ez-LOF-Vsx1-KD.pdf", width = 4, height = 4)
 
 ttbl |>
-  ggplot(aes(x = type, y = ect_N / N, color = type)) +
+  ggplot(aes(x = type_n, y = ect_N / N, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
@@ -114,9 +122,6 @@ ttbl |>
     axis.text = element_text(size = 10),
     axis.title.y = element_text(size = 10),
     axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_x_discrete(
-    labels = c("mCherry RNAi (3)", "Vsx1/2 RNAi (3)")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
