@@ -6,6 +6,31 @@ library(patchwork)
 if (!dir.exists("result/fig3")) dir.create("result/fig3")
 stat_tbl <- list()
 
+quasibinom_stat <- function(
+  formula, ttbl, ctrl, exp,
+  group_col = "type", weights_col = "total"
+) {
+  tobj <- do.call(glm, list(
+    formula = formula, data = ttbl, family = quasibinomial,
+    weights = ttbl[[weights_col]]
+  ))
+  tsobj <- summary(tobj)
+  beta0 <- tsobj$coefficients[1, 1]
+  beta1 <- tsobj$coefficients[2, 1]
+  p0 <- 1 / (1 + exp(-beta0))
+  p1 <- 1 / (1 + exp(-beta0 - beta1))
+  n <- table(ttbl[[group_col]])
+  data.frame(
+    p_value = tsobj$coefficients[2, 4],
+    n_ctrl  = unname(n[ctrl]),
+    n_exp   = unname(n[exp]),
+    fc      = p1 / p0,
+    p0      = p0,
+    p1      = p1,
+    phi     = tsobj$dispersion
+  )
+}
+
 ## Vsx1 OE Pm4/Mi4
 res_path <- list.files(
   "./Vsx1-GOF-Mi4/result", full.names = TRUE
@@ -103,23 +128,8 @@ ttbl |>
 
 ggsave("./result/fig3/Vsx1-GOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
 
-tobj <- glm(
-  Mi4 / total ~ type, data = ttbl, family = quasibinomial, weights = total
-)
-tsobj <- summary(tobj)
-beta0 <- tsobj$coefficients[1, 1]
-beta1 <- tsobj$coefficients[2, 1]
-phi <- tsobj$dispersion
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-stat_tbl[["Vsx1-GOF-Mi4"]] <- data.frame(
-  p_value = tsobj$coefficients[2, 4],
-  n_ctrl = 4L,
-  n_exp = 4L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Vsx1-GOF-Mi4"]] <- quasibinom_stat(
+  Mi4 / total ~ type, ttbl, "LacZ OE", "Vsx1 OE"
 )
 
 ## Vsx1/2 KD Pm4/Mi4
@@ -220,23 +230,8 @@ ttbl |>
 
 ggsave("./result/fig3/Vsx1-LOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
 
-tobj <- glm(
-  Mi4 / total ~ type, data = ttbl, family = quasibinomial, weights = total
-)
-tsobj <- summary(tobj)
-beta0 <- tsobj$coefficients[1, 1]
-beta1 <- tsobj$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj$dispersion
-stat_tbl[["Vsx1-LOF-Mi4"]] <- data.frame(
-  p_value = tsobj$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Vsx1-LOF-Mi4"]] <- quasibinom_stat(
+  Mi4 / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
 )
 
 ## Vsx1 OE Tm5e/Tm29/Tm33/TmY5a
@@ -338,24 +333,8 @@ ttbl |>
 
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.6, height = 3.55)
 
-tobj <- glm(
-  Tm29_et_al / total ~ type, data = ttbl,
-  family = quasibinomial, weights = total
-)
-tsobj <- summary(tobj)
-beta0 <- tsobj$coefficients[1, 1]
-beta1 <- tsobj$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj$dispersion
-stat_tbl[["Vsx1-GOF-Tm5e"]] <- data.frame(
-  p_value = tsobj$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Vsx1-GOF-Tm5e"]] <- quasibinom_stat(
+  Tm29_et_al / total ~ type, ttbl, "LacZ OE", "Vsx OE"
 )
 
 ## Bi OE DRA-Dm
@@ -460,23 +439,8 @@ qdm8 <- ttbl_dm8 |>
   ) +
   guides(color = "none")
 
-tobj_dm8 <- glm(
-  Dm8 / total ~ type, data = ttbl_dm8, family = quasibinomial, weights = total
-)
-tsobj_dm8 <- summary(tobj_dm8)
-beta0 <- tsobj_dm8$coefficients[1, 1]
-beta1 <- tsobj_dm8$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj_dm8$dispersion
-stat_tbl[["Bi-GOF-Dm (Dm8)"]] <- data.frame(
-  p_value = tsobj_dm8$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Bi-GOF-Dm (Dm8)"]] <- quasibinom_stat(
+  Dm8 / total ~ type, ttbl_dm8, "LacZ OE", "Bi OE"
 )
 
 ttbl_dra <- res_tbl[
@@ -514,26 +478,11 @@ qdra <- ttbl_dra |>
   ) +
   guides(color = "none")
 
-qdra / qdm8
-ggsave("./result/fig3/Bi-GOF-Dm-quant.pdf", width = 1.8, height = 5.6)
+p_dm8 <- qdra / qdm8
+ggsave("./result/fig3/Bi-GOF-Dm-quant.pdf", p_dm8, width = 1.8, height = 5.6)
 
-tobj_dra <- glm(
-  DmDRA / total ~ type, data = ttbl_dra, family = quasibinomial, weights = total
-)
-tsobj_dra <- summary(tobj_dra)
-beta0 <- tsobj_dra$coefficients[1, 1]
-beta1 <- tsobj_dra$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj_dra$dispersion
-stat_tbl[["Bi-GOF-Dm (DmDRA)"]] <- data.frame(
-  p_value = tsobj_dra$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Bi-GOF-Dm (DmDRA)"]] <- quasibinom_stat(
+  DmDRA / total ~ type, ttbl_dra, "LacZ OE", "Bi OE"
 )
 
 ## Bi OE TE
@@ -630,23 +579,8 @@ ttbl |>
 
 ggsave("./result/fig3/Bi-GOF-TE-quant-sup.pdf", width = 1.6, height = 3.55)
 
-tobj <- glm(
-  TE / total ~ type, data = ttbl, family = quasibinomial, weights = total
-)
-tsobj <- summary(tobj)
-beta0 <- tsobj$coefficients[1, 1]
-beta1 <- tsobj$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj$dispersion
-stat_tbl[["Bi-GOF-TE (Whole OL)"]] <- data.frame(
-  p_value = tsobj$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Bi-GOF-TE (Whole OL)"]] <- quasibinom_stat(
+  TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
 )
 
 ttbl <- res_tbl[
@@ -682,24 +616,115 @@ ttbl |>
 
 ggsave("./result/fig3/Bi-GOF-TE-quant.pdf", width = 1.6, height = 3.55)
 
-tobj <- glm(
-  ant_TE / total ~ type, data = ttbl, family = quasibinomial, weights = total
-)
-tsobj <- summary(tobj)
-beta0 <- tsobj$coefficients[1, 1]
-beta1 <- tsobj$coefficients[2, 1]
-p0 <- 1 / (1 + exp(-beta0))
-p1 <- 1 / (1 + exp(-beta0 - beta1))
-phi <- tsobj$dispersion
-stat_tbl[["Bi-GOF-TE (Anterior)"]] <- data.frame(
-  p_value = tsobj$coefficients[2, 4],
-  n_ctrl = 3L,
-  n_exp = 3L,
-  fc = p1 / p0,
-  p0 = p0,
-  p1 = p1,
-  phi = phi
+stat_tbl[["Bi-GOF-TE (Anterior)"]] <- quasibinom_stat(
+  ant_TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
 )
 
+## Bi KO TE
+data_tbl <- fread("./Bi-LOF-TE/result/all_bsh_cells.csv")
+
+data_tbl$type <- factor(
+  data_tbl$condition, levels = c("CantonS", "sgBi"),
+  labels = c("Control", "Bi sKO")
+)
+data_tbl[, cell_class := "Mi1 (Bsh+/Dimm-)"]
+data_tbl[int_2 > 500, cell_class := "TE (Bsh+/Dimm+)"]
+data_tbl$cell_class <- factor(
+  data_tbl$cell_class, levels = c("Mi1 (Bsh+/Dimm-)", "TE (Bsh+/Dimm+)")
+)
+
+data_tbl[type == "Control" & int_0 > 1000 & in_plane == TRUE] |>
+ggplot(aes(pca_x, pca_y, color = cell_class)) +
+  geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank()
+  ) +
+  scale_color_manual(
+    values = c("#7570B3", "#D95F02")
+  ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
+  guides(color = "none")
+ggsave("./result/fig3/Bi-LOF-TE-Ctrl.pdf", width = 4, height = 4)
+
+data_tbl[type == "Bi sKO" & int_0 > 1000 & in_plane == TRUE] |>
+ggplot(aes(pca_x, pca_y, color = cell_class)) +
+  geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank()
+  ) +
+  scale_color_manual(
+    values = c("#7570B3", "#D95F02")
+  ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
+  guides(color = "none")
+ggsave("./result/fig3/Bi-LOF-TE-sKO.pdf", width = 4, height = 4)
+
+p <- data_tbl[type == "Control" & int_0 > 1000 & in_plane == TRUE] |>
+ggplot(aes(pca_x, pca_y, color = cell_class)) +
+  geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank()
+  ) +
+  scale_color_manual(
+    values = c("#7570B3", "#D95F02")
+  ) +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1))
+
+ggsave("./result/fig3/Bi-LOF-TE-legend.pdf", get_legend(p))
+
+ttbl <- fread("./Bi-LOF-TE/result/te_ratios.csv")
+n <- table(ttbl$condition)
+ttbl$type <- factor(
+  ttbl$condition, levels = c("CantonS", "sgBi"),
+  labels = c(
+    paste0("Control (n = ", n["CantonS"], ")"),
+    paste0("Bi sKO (n = ", n["sgBi"], ")")
+  )
+)
+
+ttbl |>
+  ggplot(aes(x = type, y = ratio, color = type)) +
+  geom_jitter(width = 0.1, height = 0, size = 1) +
+  stat_summary(
+    fun.data = "mean_se",  pch = "-", size = 2
+  ) +
+  annotate(
+    "segment", x = 1, xend = 2, y = 0.93, yend = 0.93, color = "black"
+  ) +
+  annotate(
+    "text", x = 1.5, y = 0.95, label = "*", color = "black", size = 6
+  ) +
+  labs(y = "# In-clone&ROI TE (Bsh+/Dimm+)\n/ In-clone&ROI Bsh+") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text.x = element_text(angle = 60, hjust = 1)
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  scale_color_manual(
+    values = c("#435274", "#ba3c3c")
+  ) +
+  guides(color = "none")
+
+ggsave("./result/fig3/Bi-LOF-TE-quant.pdf", width = 1.25, height = 3.55)
+
+ttbl[, total := False + True]
+stat_tbl[["Bi-LOF-TE"]] <- quasibinom_stat(
+  True / total ~ condition, ttbl, "CantonS", "sgBi", group_col = "condition"
+)
+
+## This must be run at the end of the script!!
 stat_df <- do.call(rbind, stat_tbl)
 write.csv(stat_df, "./result/fig3/stat_summary.csv")
