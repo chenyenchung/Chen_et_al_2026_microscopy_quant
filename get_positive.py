@@ -15,23 +15,23 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('-i', '--image', type=str, required=True)
 parser.add_argument('-m', '--mask', type=str, required=True)
-parser.add_argument('-t', '--thres', type=float, required=True)
-parser.add_argument('-c', '--channel', type=int, default=1)
+parser.add_argument('-t', '--thres', type=float, required=True, nargs='+')
+parser.add_argument('-c', '--channels', type=int, required=True, nargs='+')
 parser.add_argument('-o', '--output', type=str)
 parser.add_argument('-s', '--suffix', type=str, default='filtered')
 
 args = parser.parse_args()
+
+if len(args.channels) != len(args.thres):
+    raise ValueError("The number of channels and thresholds must be the same")
 
 image_path = Path(args.image)
 mask_path = Path(args.mask)
 
 if image_path.is_file():
     img = tifffile.imread(image_path)
-    if img.ndim == 4:
-        # Move channel axis to the end while preserving
-        # the order of x and y axes
-        img = np.swapaxes(img, 1, 2)
-        img = np.swapaxes(img, 2, 3)
+    if img.ndim > 3:
+      img = np.moveaxis(img, 1, -1)
 else:
     raise FileNotFoundError(f"{image_path} is not found")
 
@@ -45,6 +45,7 @@ else:
 stats = regionprops(roi, img)
 
 out = {'label': [], 'centroid_x': [], 'centroid_y': [], 'centroid_z': [], 'area': [], 'aspherity': []}
+
 if img.ndim == 4:
     for i in range(img.shape[3]):
         out[f'int_{i}'] = []
@@ -71,7 +72,13 @@ for i in stats:
 
 outdf = pd.DataFrame(out)
 
-discarddf = outdf[outdf[f'int_{args.channel}'] < args.thres] 
+if len(args.channels) == 1:
+    discarddf = outdf[outdf[f'int_{args.channels[0]}'] < args.thres[0]] 
+else:
+    to_discard = np.zeros(outdf.shape[0], dtype=bool)
+    for i in range(len(args.channels)):
+        to_discard = to_discard | (outdf[f'int_{args.channels[i]}'] < args.thres[i])
+    discarddf = outdf[to_discard] 
 
 roi[np.isin(roi, discarddf['label'])] = 0
 

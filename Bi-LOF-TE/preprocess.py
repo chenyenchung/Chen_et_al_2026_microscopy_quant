@@ -199,7 +199,7 @@ for sample_name, meta in sample_metadata.items():
     roi = tifffile.imread(meta['roi_path'])
     signal = tifffile.imread(meta['signal_path'])
 
-    if signal.ndim > 2:
+    if signal.ndim > 3:
       signal = np.moveaxis(signal, 1, -1)
     
     stats = regionprops(roi, signal)
