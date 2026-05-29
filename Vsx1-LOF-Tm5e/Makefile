@@ -9,4 +9,5 @@ binarize: .binarize.done
 
 clean:
 	find ./ -name "*eykn*" -delete
+	find ./ -name "*cp_mask*" -delete
 	rm .binarize.done
