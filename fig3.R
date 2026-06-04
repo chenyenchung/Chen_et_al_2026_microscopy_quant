@@ -236,7 +236,7 @@ stat_tbl[["Vsx1-LOF-Mi4"]] <- quasibinom_stat(
 
 ## Vsx1 OE Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
-  "./Vsx1-GOF-Tm5e/result", full.names = TRUE
+  "./Vsx1-GOF-Tm5e-immuno/result", full.names = TRUE
 )
 
 res_tbl <- lapply(res_path, fread) |>
@@ -303,7 +303,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  , .(total = .N, Tm29_et_al = sum(cell == "Tm29/33/TmY5a (Ey/Kn/D)")),
+  with_ey_kn == TRUE,
+  .(total = .N, Tm29_et_al = sum(cell == "Tm29/33/TmY5a (Ey/Kn/D)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
@@ -337,57 +338,56 @@ stat_tbl[["Vsx1-GOF-Tm5e"]] <- quasibinom_stat(
   Tm29_et_al / total ~ type, ttbl, "LacZ OE", "Vsx OE"
 )
 
-## Bi OE DRA-Dm
+## Vsx1/2 KD Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
-  "./Bi-GOF-Dm/result", full.names = TRUE
+  "./Vsx1-LOF-Tm5e/result/", full.names = TRUE
 )
 
 res_tbl <- lapply(res_path, fread) |>
   rbindlist()
 
 res_tbl$type <- factor(res_tbl$type)
-res_tbl$type <- relevel(res_tbl$type, "LacZ OE")
-res_tbl[, dac := ifelse(int_2 > dac_threshold, "Dac+", "Dac-")]
-res_tbl[, cell := "Other"]
-res_tbl[dac == "Dac+" & y_std > 0, cell := "Dm-DRA (Dac+/Tj, dorsal)"]
-res_tbl[dac == "Dac+" & y_std < 0, cell := "Dm8 (Dac+/Tj, ventral)"]
-res_tbl$cell <- factor(res_tbl$cell, levels = c(
-  "Dm-DRA (Dac+/Tj, dorsal)", "Dm8 (Dac+/Tj, ventral)", "Other"
-))
+res_tbl$type <- relevel(res_tbl$type, "mCherry RNAi")
+res_tbl[
+  , cell := ifelse(int_0 > 800, "Tm29/33/TmY5a (Ey/Kn/D)", "Tm5e (Ey/Kn)")
+]
+res_tbl$cell <- factor(res_tbl$cell, levels = c("Tm5e (Ey/Kn)", "Tm29/33/TmY5a (Ey/Kn/D)"))
 
-res_tbl[type == "LacZ OE"] |>
+res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_color_manual(
+    values = c("#1B9E77", "#7570B3")
+  ) +
   scale_x_continuous(limits = c(-1, 1)) +
   scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#D95F02", "#7570B3", "grey80")
-  ) +
   guides(color = "none")
-ggsave("./result/fig3/Bi-GOF-Dm-Ctrl.pdf", width = 4, height = 4)
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-Ctrl.pdf", width = 4, height = 4)
 
-res_tbl[type == "Bi OE"] |>
+res_tbl[in_plane == TRUE & type == "Vsx1/2 RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
     axis.text = element_blank()
   ) +
+  scale_color_manual(
+    values = c("#1B9E77", "#7570B3")
+  ) +
   scale_x_continuous(limits = c(-1, 1)) +
   scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#D95F02", "#7570B3", "grey80")
-  ) +
   guides(color = "none")
-ggsave("./result/fig3/Bi-GOF-Dm-Exp.pdf", width = 4, height = 4)
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-OE.pdf", width = 4, height = 4)
 
-p <- res_tbl[type == "LacZ OE"] |>
+p <- res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -397,39 +397,34 @@ ggplot(aes(x_std, y_std, color = cell)) +
     legend.position = "bottom"
   ) +
   scale_color_manual(
-    values = c("#D95F02", "#7570B3", "grey80")
+    values = c("#1B9E77", "#7570B3")
   ) +
   guides(color = guide_legend(override.aes = list(size = 4))) +
   labs(color = "Cell type")
 
-ggsave("./result/fig3/Bi-GOF-Dm-legend.pdf", get_legend(p))
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-legend.pdf", get_legend(p))
 
-ttbl_dm8 <- res_tbl[
-  , .(total = .N, Dm8 = sum(cell == "Dm8 (Dac+/Tj, ventral)")),
+ttbl <- res_tbl[
+  in_plane == TRUE & x_std > 0,
+  .(total = .N, Tm5e = sum(cell == "Tm5e (Ey/Kn)")),
   by = c("type", "sample")
-][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
-  , type_n := factor(type_n, levels = rev(unique(type_n)))
-]
+][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
-qdm8 <- ttbl_dm8 |>
-  ggplot(aes(x = type_n, y = Dm8 / total, color = type_n)) +
+ttbl |>
+  ggplot(aes(x = type_n, y = Tm5e / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.27, yend = 0.27, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.29, label = "*", color = "black", size = 6
-  ) +
-  labs(
-    title = "Dm8",
-    y = "# Dm8 (Dac+/Tj, ventral) /\nTotal (All Dac+/Tj+)"
-  ) +
+  # annotate(
+  #   "segment", x = 1, xend = 2, y = 0.55, yend = 0.55, color = "black"
+  # ) +
+  # annotate(
+  #   "text", x = 1.5, y = 0.57, label = "*", color = "black", size = 6
+  # ) +
+  labs(y = "# Tm5e (Ey/Kn)\n/ Total (All Ey/Kn+)") +
   theme_classic() +
   theme(
-    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
     axis.title.x = element_blank(),
     axis.text.x = element_text(angle = 60, hjust = 1)
   ) +
@@ -439,55 +434,15 @@ qdm8 <- ttbl_dm8 |>
   ) +
   guides(color = "none")
 
-stat_tbl[["Bi-GOF-Dm (Dm8)"]] <- quasibinom_stat(
-  Dm8 / total ~ type, ttbl_dm8, "LacZ OE", "Bi OE"
-)
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-quant.pdf", width = 1.25, height = 3.55)
 
-ttbl_dra <- res_tbl[
-  , .(total = .N, DmDRA = sum(cell == "Dm-DRA (Dac+/Tj, dorsal)")),
-  by = c("type", "sample")
-][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
-  , type_n := factor(type_n, levels = rev(unique(type_n)))
-]
-
-qdra <- ttbl_dra |>
-  ggplot(aes(x = type_n, y = DmDRA / total, color = type_n)) +
-  geom_jitter(width = 0.1, height = 0, size = 1) +
-  stat_summary(
-    fun.data = "mean_se",  pch = "-", size = 2
-  ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.22, yend = 0.22, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.24, label = "*", color = "black", size = 6
-  ) +
-  labs(
-    title = "DmDRA", 
-    y = "# DmDRA (Dac+/Tj, dorsal) /\nTotal (All Dac+/Tj+)"
-  ) +
-  theme_classic() +
-  theme(
-    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
-    axis.title.x = element_blank(),
-    axis.text.x = element_text(angle = 60, hjust = 1)
-  ) +
-  scale_y_continuous(limits = c(0, NA)) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  guides(color = "none")
-
-p_dm8 <- qdra / qdm8
-ggsave("./result/fig3/Bi-GOF-Dm-quant.pdf", p_dm8, width = 1.8, height = 5.6)
-
-stat_tbl[["Bi-GOF-Dm (DmDRA)"]] <- quasibinom_stat(
-  DmDRA / total ~ type, ttbl_dra, "LacZ OE", "Bi OE"
+stat_tbl[["Vsx1-LOF-Tm5e"]] <- quasibinom_stat(
+  Tm5e / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
 )
 
 ## Bi OE TE
 res_path <- list.files(
-  "./Bi-GOF-TE/result", full.names = TRUE
+  "./Bi-GOF-TE-Hoechst-based/result", full.names = TRUE
 )
 
 res_tbl <- lapply(res_path, fread) |>
@@ -674,13 +629,16 @@ ggplot(aes(pca_x, pca_y, color = cell_class)) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
-    axis.text = element_blank()
+    axis.text = element_blank(),
+    legend.position = "bottom"
   ) +
   scale_color_manual(
     values = c("#7570B3", "#D95F02")
   ) +
   scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1))
+  scale_y_continuous(limits = c(-1, 1)) +
+  guides(color = guide_legend(override.aes = list(size = 4))) +
+  labs(color = "Cell type")
 
 ggsave("./result/fig3/Bi-LOF-TE-legend.pdf", get_legend(p))
 
