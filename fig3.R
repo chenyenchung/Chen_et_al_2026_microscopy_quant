@@ -236,7 +236,7 @@ stat_tbl[["Vsx1-LOF-Mi4"]] <- quasibinom_stat(
 
 ## Vsx1 OE Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
-  "./Vsx1-GOF-Tm5e-immuno/result", full.names = TRUE
+  "./Vsx1-GOF-Tm5e/result", full.names = TRUE
 )
 
 res_tbl <- lapply(res_path, fread) |>
@@ -246,14 +246,14 @@ res_tbl$type <- factor(res_tbl$type)
 res_tbl$type <- relevel(res_tbl$type, "LacZ OE")
 res_tbl[
   , cell := ifelse(
-    int_0 > D_threshold, "Tm29/33/TmY5a (Ey/Kn/D)", "Tm5e (Ey/Kn)"
+    int_0 > int_threshold, "Tm29/33/TmY5a (Ey/Kn/D)", "Tm5e (Ey/Kn)"
   )
 ]
 res_tbl$cell <- factor(
   res_tbl$cell, levels = c("Tm5e (Ey/Kn)", "Tm29/33/TmY5a (Ey/Kn/D)")
 )
 
-res_tbl[with_ey_kn == TRUE & type == "LacZ OE"] |>
+res_tbl[in_plane == TRUE & type == "LacZ OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -269,7 +269,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-Ctrl.pdf", width = 4, height = 4)
 
-res_tbl[with_ey_kn == TRUE & type == "Vsx OE"] |>
+res_tbl[in_plane == TRUE & type == "Vsx1 GOF"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -285,7 +285,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-Exp.pdf", width = 4, height = 4)
 
-p <- res_tbl[with_ey_kn == TRUE & type == "Vsx OE"] |>
+p <- res_tbl[in_plane == TRUE & type == "Vsx1 GOF"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -303,7 +303,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  with_ey_kn == TRUE,
+  in_plane == TRUE,
   .(total = .N, Tm29_et_al = sum(cell == "Tm29/33/TmY5a (Ey/Kn/D)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
@@ -335,7 +335,7 @@ ttbl |>
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.6, height = 3.55)
 
 stat_tbl[["Vsx1-GOF-Tm5e"]] <- quasibinom_stat(
-  Tm29_et_al / total ~ type, ttbl, "LacZ OE", "Vsx OE"
+  Tm29_et_al / total ~ type, ttbl, "LacZ OE", "Vsx1 GOF"
 )
 
 ## Vsx1/2 KD Tm5e/Tm29/Tm33/TmY5a
