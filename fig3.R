@@ -172,7 +172,7 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Vsx1-GOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
+ggsave("./result/fig3/Vsx1-GOF-Mi4-quant.pdf", width = 1.5, height = 3.55)
 
 ## Vsx1/2 KD Pm4/Mi4
 res_path <- list.files(
@@ -270,7 +270,7 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Vsx1-LOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
+ggsave("./result/fig3/Vsx1-LOF-Mi4-quant.pdf", width = 1.5, height = 3.55)
 
 ## Vsx1 OE Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
@@ -371,7 +371,7 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.6, height = 3.55)
+ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.5, height = 3.55)
 
 ## Vsx1/2 KD Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
@@ -391,7 +391,6 @@ res_tbl$cell <- factor(res_tbl$cell, levels = c("Tm5e (Ey/Kn)", "Tm29/33/TmY5a (
 res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -408,7 +407,6 @@ ggsave("./result/fig3/Vsx1-LOF-Tm5e-Ctrl.pdf", width = 4, height = 4)
 res_tbl[in_plane == TRUE & type == "Vsx1/2 RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -420,7 +418,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   scale_x_continuous(limits = c(-1, 1)) +
   scale_y_continuous(limits = c(-1, 1)) +
   guides(color = "none")
-ggsave("./result/fig3/Vsx1-LOF-Tm5e-OE.pdf", width = 4, height = 4)
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-KD.pdf", width = 4, height = 4)
 
 p <- res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
@@ -469,11 +467,11 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Vsx1-LOF-Tm5e-quant.pdf", width = 1.25, height = 3.55)
+ggsave("./result/fig3/Vsx1-LOF-Tm5e-quant.pdf", width = 1.5, height = 3.55)
 
 ## Bi OE TE
 res_path <- list.files(
-  "./Bi-GOF-TE-Hoechst-based/result", full.names = TRUE
+  "./Bi-GOF-TE/result", full.names = TRUE
 )
 
 res_tbl <- lapply(res_path, fread) |>
@@ -481,11 +479,13 @@ res_tbl <- lapply(res_path, fread) |>
 
 res_tbl$type <- factor(res_tbl$type)
 res_tbl$type <- relevel(res_tbl$type, "LacZ OE")
-res_tbl[, cell := "Other"]
-res_tbl[int_1 > dimm_threshold & int_2 > fs_threshold, cell := "TE (Dimm+/Fs+)"]
-res_tbl$cell <- factor(res_tbl$cell, levels = c("TE (Dimm+/Fs+)", "Other"))
+res_tbl[, cell := "Mi1 (Bsh+/Dimm-)"]
+res_tbl[int_0 > int_threshold, cell := "TE (Bsh+/Dimm+)"]
+res_tbl$cell <- factor(
+  res_tbl$cell, levels = c("Mi1 (Bsh+/Dimm-)", "TE (Bsh+/Dimm+)")
+)
 
-res_tbl[cell == "TE (Dimm+/Fs+)" & type == "LacZ OE"] |>
+res_tbl[in_plane == TRUE & type == "LacZ OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -497,12 +497,12 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.text = element_blank()
   ) +
   scale_color_manual(
-    values = c("#D95F02", "#7570B3")
+    values = c("#7570B3", "#D95F02")
   ) +
   guides(color = "none")
 ggsave("./result/fig3/Bi-GOF-TE-Ctrl.pdf", width = 4, height = 4)
 
-res_tbl[cell == "TE (Dimm+/Fs+)" & type == "Bi OE"] |>
+res_tbl[in_plane == TRUE & type == "Bi OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   geom_vline(xintercept = 0, linetype = "dashed") +
@@ -514,12 +514,12 @@ ggplot(aes(x_std, y_std, color = cell)) +
     axis.text = element_blank()
   ) +
   scale_color_manual(
-    values = c("#D95F02", "#7570B3")
+    values = c("#7570B3", "#D95F02")
   ) +
   guides(color = "none")
 ggsave("./result/fig3/Bi-GOF-TE-Exp.pdf", width = 4, height = 4)
 
-p <- res_tbl[cell == "TE (Dimm+/Fs+)" & type == "LacZ OE"] |>
+p <- res_tbl[in_plane == TRUE & type == "LacZ OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -531,7 +531,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   scale_x_continuous(limits = c(-1, 1)) +
   scale_y_continuous(limits = c(-1, 1)) +
   scale_color_manual(
-    values = c("#D95F02", "#7570B3")
+    values = c("#7570B3", "#D95F02")
   ) +
   guides(color = guide_legend(override.aes = list(size = 4))) +
   labs(color = "Cell type")
@@ -539,11 +539,16 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Bi-GOF-TE-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  , .(total = .N, TE = sum(cell == "TE (Dimm+/Fs+)")),
+  in_plane == TRUE, .(total = .N, TE = sum(cell == "TE (Bsh+/Dimm+)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
   , type_n := factor(type_n, levels = rev(unique(type_n)))
   ]
+
+stat_tbl[["Bi-GOF-TE (Whole OL)"]] <- quasibinom_stat(
+  TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
+)
+sig_label <- p_to_sig(stat_tbl[["Bi-GOF-TE (Whole OL)"]]$p_value)
 
 ttbl |>
   ggplot(aes(x = type_n, y = TE / total, color = type_n)) +
@@ -551,7 +556,8 @@ ttbl |>
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  labs(y = "# TE (Dimm+/Fs+) /\nTotal (All Hoechst+)") +
+  sig_annotation(ttbl$TE / ttbl$total, ttbl$type_n, sig_label) +
+  labs(y = "# TE (Bsh+/Dimm+) /\nTotal (All in-plane Bsh+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -563,18 +569,20 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Bi-GOF-TE-quant-sup.pdf", width = 1.6, height = 3.55)
-
-stat_tbl[["Bi-GOF-TE (Whole OL)"]] <- quasibinom_stat(
-  TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
-)
+ggsave("./result/fig3/Bi-GOF-TE-quant-sup.pdf", width = 1.5, height = 3.55)
 
 ttbl <- res_tbl[
-  x_std > 0, .(total = .N, ant_TE = sum(cell == "TE (Dimm+/Fs+)")),
+  in_plane == TRUE & x_std > 0,
+  .(total = .N, ant_TE = sum(cell == "TE (Bsh+/Dimm+)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"][
   , type_n := factor(type_n, levels = rev(unique(type_n)))
 ]
+
+stat_tbl[["Bi-GOF-TE (Anterior)"]] <- quasibinom_stat(
+  ant_TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
+)
+sig_label <- p_to_sig(stat_tbl[["Bi-GOF-TE (Anterior)"]]$p_value)
 
 ttbl |>
   ggplot(aes(x = type_n, y = ant_TE / total, color = type_n)) +
@@ -582,7 +590,8 @@ ttbl |>
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  labs(y = "# Ectopic TE (Dimm+/Fs+) /\nTotal (All Hoechst+)") +
+  sig_annotation(ttbl$ant_TE / ttbl$total, ttbl$type_n, sig_label) +
+  labs(y = "# Ectopic TE (Bsh+/Dimm+) /\nTotal (Anterior in-plane Bsh+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -594,11 +603,7 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Bi-GOF-TE-quant.pdf", width = 1.6, height = 3.55)
-
-stat_tbl[["Bi-GOF-TE (Anterior)"]] <- quasibinom_stat(
-  ant_TE / total ~ type, ttbl, "LacZ OE", "Bi OE"
-)
+ggsave("./result/fig3/Bi-GOF-TE-quant.pdf", width = 1.5, height = 3.55)
 
 ## Bi KO TE
 data_tbl <- fread("./Bi-LOF-TE/result/all_bsh_cells.csv")
@@ -613,10 +618,23 @@ data_tbl$cell_class <- factor(
   data_tbl$cell_class, levels = c("Mi1 (Bsh+/Dimm-)", "TE (Bsh+/Dimm+)")
 )
 
+bi_lof_te_density_tbl <- data_tbl[
+  type == "Control" & cell_class == "TE (Bsh+/Dimm+)" & in_plane == TRUE
+]
+
 data_tbl[type == "Control" & int_0 > 1000 & in_plane == TRUE] |>
 ggplot(aes(pca_x, pca_y, color = cell_class)) +
   geom_point(size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_density_2d(
+    data = bi_lof_te_density_tbl,
+    aes(x = pca_x, y = pca_y),
+    contour_var = "ndensity",
+    breaks = 0.5,
+    color = "black",
+    linetype = "dashed",
+    linewidth = 0.4,
+    inherit.aes = FALSE
+  ) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -633,7 +651,16 @@ ggsave("./result/fig3/Bi-LOF-TE-Ctrl.pdf", width = 4, height = 4)
 data_tbl[type == "Bi sKO" & int_0 > 1000 & in_plane == TRUE] |>
 ggplot(aes(pca_x, pca_y, color = cell_class)) +
   geom_point(size = 0.5) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_density_2d(
+    data = bi_lof_te_density_tbl,
+    aes(x = pca_x, y = pca_y),
+    contour_var = "ndensity",
+    breaks = 0.5,
+    color = "black",
+    linetype = "dashed",
+    linewidth = 0.4,
+    inherit.aes = FALSE
+  ) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -702,7 +729,7 @@ ttbl |>
   ) +
   guides(color = "none")
 
-ggsave("./result/fig3/Bi-LOF-TE-quant.pdf", width = 1.25, height = 3.55)
+ggsave("./result/fig3/Bi-LOF-TE-quant.pdf", width = 1.5, height = 3.55)
 
 ## This must be run at the end of the script!!
 stat_df <- do.call(rbind, stat_tbl)
