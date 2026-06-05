@@ -31,6 +31,52 @@ quasibinom_stat <- function(
   )
 }
 
+p_to_sig <- function(p_value) {
+  if (!is.finite(p_value)) return("n.s.")
+  if (p_value < 0.001) return("***")
+  if (p_value < 0.01) return("**")
+  if (p_value < 0.05) return("*")
+  "n.s."
+}
+
+sig_annotation <- function(
+  y, group, label, x = c(1, 2), bar_offset = 0.05, label_offset = 0.08,
+  color = "black", text_size = 6
+) {
+  valid <- is.finite(y) & !is.na(group)
+  finite_y <- y[valid]
+  finite_group <- group[valid]
+  if (length(finite_y) == 0) {
+    stop("sig_annotation() needs at least one finite y value")
+  }
+  data_max <- max(finite_y)
+  se_upper <- max(
+    vapply(
+      split(finite_y, finite_group), function(group_y) mean_se(group_y)$ymax,
+      numeric(1)
+    ),
+    na.rm = TRUE
+  )
+  annotation_base <- max(data_max, se_upper, na.rm = TRUE)
+  y_ptp <- diff(range(finite_y))
+  if (y_ptp == 0) {
+    y_ptp <- max(abs(annotation_base), 1)
+  }
+
+  list(
+    annotate(
+      "segment", x = x[1], xend = x[2],
+      y = annotation_base + bar_offset * y_ptp,
+      yend = annotation_base + bar_offset * y_ptp,
+      color = color
+    ),
+    annotate(
+      "text", x = mean(x), y = annotation_base + label_offset * y_ptp,
+      label = label, color = color, size = text_size
+    )
+  )
+}
+
 ## Vsx1 OE Pm4/Mi4
 res_path <- list.files(
   "./Vsx1-GOF-Mi4/result", full.names = TRUE
@@ -98,23 +144,23 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-GOF-Mi4-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  x_std > 0, .(total = .N, Mi4 = sum(cell == "Mi4 (Ct/Run)")),
+  x_std > 0, .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
+stat_tbl[["Vsx1-GOF-Mi4"]] <- quasibinom_stat(
+  Pm4 / total ~ type, ttbl, "LacZ OE", "Vsx1 OE"
+)
+sig_label <- p_to_sig(stat_tbl[["Vsx1-GOF-Mi4"]]$p_value)
+
 ttbl |>
-  ggplot(aes(x = type_n, y = Mi4 / total, color = type_n)) +
+  ggplot(aes(x = type_n, y = Pm4 / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.55, yend = 0.55, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.57, label = "*", color = "black", size = 6
-  ) +
-  labs(y = "# Anterior Mi4 (Ct/Run)\n/ Total (All Anterior Run+)") +
+  sig_annotation(ttbl$Pm4 / ttbl$total, ttbl$type_n, sig_label) +
+  labs(y = "# Anterior Pm4 (Run)\n/ Total (All Anterior Run+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -127,10 +173,6 @@ ttbl |>
   guides(color = "none")
 
 ggsave("./result/fig3/Vsx1-GOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
-
-stat_tbl[["Vsx1-GOF-Mi4"]] <- quasibinom_stat(
-  Mi4 / total ~ type, ttbl, "LacZ OE", "Vsx1 OE"
-)
 
 ## Vsx1/2 KD Pm4/Mi4
 res_path <- list.files(
@@ -200,23 +242,23 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-LOF-Mi4-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  x_std > 0, .(total = .N, Mi4 = sum(cell == "Mi4 (Ct/Run)")),
+  x_std > 0, .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
+stat_tbl[["Vsx1-LOF-Mi4"]] <- quasibinom_stat(
+  Pm4 / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
+)
+sig_label <- p_to_sig(stat_tbl[["Vsx1-LOF-Mi4"]]$p_value)
+
 ttbl |>
-  ggplot(aes(x = type_n, y = Mi4 / total, color = type_n)) +
+  ggplot(aes(x = type_n, y = Pm4 / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.7, yend = 0.7, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.72, label = "*", color = "black", size = 6
-  ) +
-  labs(y = "# Anterior Mi4 (Ct/Run)\n/ Total (All Anterior Run+)") +
+  sig_annotation(ttbl$Pm4 / ttbl$total, ttbl$type_n, sig_label) +
+  labs(y = "# Anterior Pm4 (Run)\n/ Total (All Anterior Run+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -230,10 +272,6 @@ ttbl |>
 
 ggsave("./result/fig3/Vsx1-LOF-Mi4-quant.pdf", width = 1.25, height = 3.55)
 
-stat_tbl[["Vsx1-LOF-Mi4"]] <- quasibinom_stat(
-  Mi4 / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
-)
-
 ## Vsx1 OE Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
   "./Vsx1-GOF-Tm5e/result", full.names = TRUE
@@ -242,6 +280,7 @@ res_path <- list.files(
 res_tbl <- lapply(res_path, fread) |>
   rbindlist()
 
+res_tbl[type == "Vsx1 GOF", type := "Vsx1 OE"]
 res_tbl$type <- factor(res_tbl$type)
 res_tbl$type <- relevel(res_tbl$type, "LacZ OE")
 res_tbl[
@@ -269,7 +308,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-Ctrl.pdf", width = 4, height = 4)
 
-res_tbl[in_plane == TRUE & type == "Vsx1 GOF"] |>
+res_tbl[in_plane == TRUE & type == "Vsx1 OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -285,7 +324,7 @@ ggplot(aes(x_std, y_std, color = cell)) +
   guides(color = "none")
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-Exp.pdf", width = 4, height = 4)
 
-p <- res_tbl[in_plane == TRUE & type == "Vsx1 GOF"] |>
+p <- res_tbl[in_plane == TRUE & type == "Vsx1 OE"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
   theme_minimal() +
@@ -304,23 +343,23 @@ ggsave("./result/fig3/Vsx1-GOF-Tm5e-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
   in_plane == TRUE,
-  .(total = .N, Tm29_et_al = sum(cell == "Tm29/33/TmY5a (Ey/Kn/D)")),
+  .(total = .N, Tm5e = sum(cell == "Tm5e (Ey/Kn)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
+stat_tbl[["Vsx1-GOF-Tm5e"]] <- quasibinom_stat(
+  Tm5e / total ~ type, ttbl, "LacZ OE", "Vsx1 OE"
+)
+sig_label <- p_to_sig(stat_tbl[["Vsx1-GOF-Tm5e"]]$p_value)
+
 ttbl |>
-  ggplot(aes(x = type_n, y = Tm29_et_al / total, color = type_n)) +
+  ggplot(aes(x = type_n, y = Tm5e / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.73, yend = 0.73, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.75, label = "*", color = "black", size = 6
-  ) +
-  labs(y = "# Tm29/33/TmY5a (Ey/Kn/D) /\nTotal (All Ey/Kn+)") +
+  sig_annotation(ttbl$Tm5e / ttbl$total, ttbl$type_n, sig_label) +
+  labs(y = "# Tm5e (Ey/Kn) /\nTotal (All Ey/Kn+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -333,10 +372,6 @@ ttbl |>
   guides(color = "none")
 
 ggsave("./result/fig3/Vsx1-GOF-Tm5e-quant.pdf", width = 1.6, height = 3.55)
-
-stat_tbl[["Vsx1-GOF-Tm5e"]] <- quasibinom_stat(
-  Tm29_et_al / total ~ type, ttbl, "LacZ OE", "Vsx1 GOF"
-)
 
 ## Vsx1/2 KD Tm5e/Tm29/Tm33/TmY5a
 res_path <- list.files(
@@ -410,18 +445,18 @@ ttbl <- res_tbl[
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
+stat_tbl[["Vsx1-LOF-Tm5e"]] <- quasibinom_stat(
+  Tm5e / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
+)
+sig_label <- p_to_sig(stat_tbl[["Vsx1-LOF-Tm5e"]]$p_value)
+
 ttbl |>
   ggplot(aes(x = type_n, y = Tm5e / total, color = type_n)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  # annotate(
-  #   "segment", x = 1, xend = 2, y = 0.55, yend = 0.55, color = "black"
-  # ) +
-  # annotate(
-  #   "text", x = 1.5, y = 0.57, label = "*", color = "black", size = 6
-  # ) +
+  sig_annotation(ttbl$Tm5e / ttbl$total, ttbl$type_n, sig_label) +
   labs(y = "# Tm5e (Ey/Kn)\n/ Total (All Ey/Kn+)") +
   theme_classic() +
   theme(
@@ -435,10 +470,6 @@ ttbl |>
   guides(color = "none")
 
 ggsave("./result/fig3/Vsx1-LOF-Tm5e-quant.pdf", width = 1.25, height = 3.55)
-
-stat_tbl[["Vsx1-LOF-Tm5e"]] <- quasibinom_stat(
-  Tm5e / total ~ type, ttbl, "mCherry RNAi", "Vsx1/2 RNAi"
-)
 
 ## Bi OE TE
 res_path <- list.files(
@@ -551,12 +582,6 @@ ttbl |>
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  # annotate(
-  #   "segment", x = 1, xend = 2, y = 0.0033, yend = 0.0033, color = "black"
-  # ) +
-  # annotate(
-  #   "text", x = 1.5, y = 0.0035, label = "*", color = "black", size = 6
-  # ) +
   labs(y = "# Ectopic TE (Dimm+/Fs+) /\nTotal (All Hoechst+)") +
   theme_classic() +
   theme(
@@ -652,18 +677,19 @@ ttbl$type <- factor(
   )
 )
 
+ttbl[, total := False + True]
+stat_tbl[["Bi-LOF-TE"]] <- quasibinom_stat(
+  True / total ~ condition, ttbl, "CantonS", "sgBi", group_col = "condition"
+)
+sig_label <- p_to_sig(stat_tbl[["Bi-LOF-TE"]]$p_value)
+
 ttbl |>
   ggplot(aes(x = type, y = ratio, color = type)) +
   geom_jitter(width = 0.1, height = 0, size = 1) +
   stat_summary(
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
-  annotate(
-    "segment", x = 1, xend = 2, y = 0.93, yend = 0.93, color = "black"
-  ) +
-  annotate(
-    "text", x = 1.5, y = 0.95, label = "*", color = "black", size = 6
-  ) +
+  sig_annotation(ttbl$ratio, ttbl$type, sig_label) +
   labs(y = "# In-clone&ROI TE (Bsh+/Dimm+)\n/ In-clone&ROI Bsh+") +
   theme_classic() +
   theme(
@@ -677,11 +703,6 @@ ttbl |>
   guides(color = "none")
 
 ggsave("./result/fig3/Bi-LOF-TE-quant.pdf", width = 1.25, height = 3.55)
-
-ttbl[, total := False + True]
-stat_tbl[["Bi-LOF-TE"]] <- quasibinom_stat(
-  True / total ~ condition, ttbl, "CantonS", "sgBi", group_col = "condition"
-)
 
 ## This must be run at the end of the script!!
 stat_df <- do.call(rbind, stat_tbl)
