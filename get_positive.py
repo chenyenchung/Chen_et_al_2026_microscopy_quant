@@ -19,6 +19,8 @@ parser.add_argument('-t', '--thres', type=float, required=True, nargs='+')
 parser.add_argument('-c', '--channels', type=int, required=True, nargs='+')
 parser.add_argument('-o', '--output', type=str)
 parser.add_argument('-s', '--suffix', type=str, default='filtered')
+parser.add_argument('-znorm', '--znorm', action='store_true',
+                    help='Normalize each z plane by the median ROI intensity before thresholding')
 
 args = parser.parse_args()
 
@@ -50,6 +52,49 @@ def intensity_means_for_channels(stats, img, channels):
     return np.column_stack([stats[f"intensity_mean-{channel}"] for channel in channels])
 
 
+def z_normalized_means_for_channels(roi, img, labels, channels):
+    if roi.shape != img.shape[:3]:
+        raise ValueError(f"ROI shape {roi.shape} does not match image spatial shape {img.shape[:3]}")
+
+    max_label = int(roi.max())
+    labels = labels.astype(np.intp, copy=False)
+    means = np.zeros((labels.size, len(channels)), dtype=float)
+
+    for channel_idx, channel in enumerate(channels):
+        channel_img = img if img.ndim == 3 else img[..., channel]
+        norm_sums = np.zeros(max_label + 1, dtype=float)
+        counts = np.zeros(max_label + 1, dtype=np.int64)
+
+        for z in range(roi.shape[0]):
+            z_labels = roi[z].ravel().astype(np.intp, copy=False)
+            foreground = z_labels > 0
+            if not np.any(foreground):
+                continue
+
+            z_values = channel_img[z].ravel()[foreground]
+            z_labels = z_labels[foreground]
+            z_counts = np.bincount(z_labels, minlength=max_label + 1)
+            z_sums = np.bincount(z_labels, weights=z_values, minlength=max_label + 1)
+            present = z_counts > 0
+            z_means = z_sums[present] / z_counts[present]
+            finite_means = z_means[np.isfinite(z_means)]
+            if finite_means.size == 0:
+                raise ValueError(f"No finite ROI intensity median for z={z}, channel={channel}")
+
+            z_median = np.median(finite_means)
+            if not np.isfinite(z_median) or z_median <= 0:
+                raise ValueError(
+                    f"ROI intensity median for z={z}, channel={channel} is not positive: {z_median}"
+                )
+
+            norm_sums += z_sums / z_median
+            counts += z_counts
+
+        means[:, channel_idx] = norm_sums[labels] / counts[labels]
+
+    return means
+
+
 image_path = Path(args.image)
 mask_path = Path(args.mask)
 
@@ -70,7 +115,10 @@ else:
 
 stats = regionprops_table(roi, img, properties=("label", "intensity_mean"))
 labels = stats["label"].astype(np.intp, copy=False)
-means = intensity_means_for_channels(stats, img, args.channels)
+if args.znorm:
+    means = z_normalized_means_for_channels(roi, img, labels, args.channels)
+else:
+    means = intensity_means_for_channels(stats, img, args.channels)
 thresholds = np.asarray(args.thres, dtype=means.dtype)
 to_discard = np.any(means < thresholds, axis=1)
 discard_labels = labels[to_discard]
