@@ -208,27 +208,6 @@ res_tbl |>
   guides(color = "none")
 ggsave("./result/fig4/Ez-LOF-Bi-scatter.pdf", width = 4, height = 4)
 
-res_tbl |>
-  ggplot(aes(x = x_std, y = y_std, color = type)) +
-  geom_density_2d(
-    contour_var = "ndensity",
-    breaks = 0.5,
-    linewidth = 0.4
-  ) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Bi-density.pdf", width = 4, height = 4)
-
 p <- res_tbl |>
   ggplot(aes(x = x_std, y = y_std, color = type)) +
   geom_point(size = 0.5, alpha = 0.12) +
@@ -303,5 +282,82 @@ ttbl |>
   ) +
   guides(color = "none")
 ggsave("./result/fig4/Ez-LOF-Bi-quant.pdf", width = 3, height = 4)
+
+## Ez LOF Vvl radial variance
+res_path <- list.files(
+  "Ez-LOF-Vvl/result", full.names = TRUE, pattern = "preprocessed.csv$"
+)
+
+res_tbl <- lapply(res_path, fread) |>
+  rbindlist()
+
+res_tbl$type <- factor(
+  res_tbl$type,
+  levels = c("mCherry RNAi", "E(z) RNAi")
+)
+
+res_tbl |>
+  ggplot(aes(x = x_std, y = y_std, color = type)) +
+  geom_point_rast(size = 0.5, alpha = 0.12, raster.dpi = 300) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_x_continuous(limits = c(-1, 1)) +
+  scale_y_continuous(limits = c(-1, 1)) +
+  scale_color_manual(
+    values = c("#435274", "#ba3c3c")
+  ) +
+  theme_minimal() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank()
+  ) +
+  guides(color = "none")
+ggsave("./result/fig4/Ez-LOF-Vvl-scatter.pdf", width = 4, height = 4)
+
+ttbl <- res_tbl[
+  , .(var_r = var(r)), by = c("sample", "type")
+][
+  , type_n := paste0(type, " (n = ", .N, ")"), by = type
+][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
+]
+
+tobj <- t.test(var_r ~ type, data = ttbl)
+n <- table(ttbl$type)
+
+stat_tbl[["vvl_radial_variance"]] <- data.table(
+  exp = "Variance of normalized distance of Vvl (E(z) RNAi, neuronal)",
+  pvalue = tobj$p.value,
+  p0 = ttbl[type == "mCherry RNAi", mean(var_r)],
+  p1 = ttbl[type == "E(z) RNAi", mean(var_r)],
+  nctrl = unname(n["mCherry RNAi"]),
+  nexp = unname(n["E(z) RNAi"]),
+  phi = NA
+)
+
+sig_label <- p_to_sig(tobj$p.value)
+
+ttbl |>
+  ggplot(aes(x = type_n, y = var_r, color = type_n)) +
+  geom_jitter(width = 0.1, height = 0, size = 1) +
+  stat_summary(
+    fun.data = "mean_se", pch = "-", size = 2
+  ) +
+  sig_annotation(
+    ttbl$var_r, ttbl$type_n, sig_label, label_offset = 0.25, bar_offset = 0.15
+  ) +
+  labs(y = "Variance on the radial axis") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 10),
+    axis.title.y = element_text(size = 10),
+    axis.text.x = element_text(angle = 60, hjust = 1)
+  ) +
+  scale_color_manual(
+    values = c("#435274", "#ba3c3c")
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  guides(color = "none")
+ggsave("./result/fig4/Ez-LOF-Vvl-variance.pdf", width = 3, height = 4)
 
 write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
