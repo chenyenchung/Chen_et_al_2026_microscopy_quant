@@ -51,6 +51,25 @@ sig_annotation <- function(
   )
 }
 
+condition_scatter <- function(tbl, condition, color, raster = TRUE) {
+  p <- tbl[type == condition] |>
+    ggplot(aes(x = x_std, y = y_std)) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_x_continuous(limits = c(-1, 1)) +
+    scale_y_continuous(limits = c(-1, 1)) +
+    theme_minimal() +
+    theme(
+      axis.title = element_blank(),
+      axis.text = element_blank()
+    )
+
+  if (raster) {
+    p + geom_point_rast(color = color, size = 0.5, alpha = 1, raster.dpi = 300)
+  } else {
+    p + geom_point(color = color, size = 0.5, alpha = 1)
+  }
+}
+
 res_path <- list.files(
   "Ez-LOF-Vsx1/result", full.names = TRUE
 )
@@ -123,30 +142,10 @@ stat_tbl[["ectopic_radial"]] <- data.table(
 )
 
 ## Visualization
-res_tbl[type == "mCherry RNAi"] |>
-  ggplot(aes(x = x_std, y = y_std)) +
-  geom_point(color = "#435274", size = 0.5) +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  geom_vline(xintercept = 0, linetype = "dashed")
+condition_scatter(res_tbl, "mCherry RNAi", "#435274", raster = FALSE)
 ggsave("./result/fig4/Ez-LOF-Vsx1-Ctrl.pdf", width = 4, height = 4)
 
-res_tbl[type == "E(z) RNAi"] |>
-  ggplot(aes(x = x_std, y = y_std)) +
-  geom_point(color = "#ba3c3c", size = 0.5) +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  geom_vline(xintercept = 0, linetype = "dashed")
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c", raster = FALSE)
 ggsave("./result/fig4/Ez-LOF-Vsx1-KD.pdf", width = 4, height = 4)
 
 ttbl |>
@@ -161,20 +160,20 @@ ttbl |>
   annotate(
     "text", x = 1.5, y = 0.17, label = "*", color = "black", size = 6
   ) +
-  labs(y = "# Posterior Vsx1 / Total (All Vsx1+)") +
+  labs(y = "# Posterior Vsx1 /\nTotal (All Vsx1+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
-    axis.text = element_text(size = 10),
-    axis.title.y = element_text(size = 10),
-    axis.text.x = element_text(angle = 60, hjust = 1)
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 14)
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
     values = c("#435274", "#ba3c3c")
   ) +
   guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Vsx1-quant.pdf", width = 3, height = 4)
+ggsave("./result/fig4/Ez-LOF-Vsx1-quant.pdf", width = 2, height = 4)
 
 ## Ez LOF Bi anterior abundance
 res_path <- list.files(
@@ -191,26 +190,15 @@ res_tbl$type <- factor(
 )
 res_tbl[, anterior := x_std > 0]
 
-res_tbl |>
-  ggplot(aes(x = x_std, y = y_std, color = type)) +
-  geom_point_rast(size = 0.5, alpha = 0.12, raster.dpi = 300) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Bi-scatter.pdf", width = 4, height = 4)
+condition_scatter(res_tbl, "mCherry RNAi", "#435274")
+ggsave("./result/fig4/Ez-LOF-Bi-Ctrl.pdf", width = 4, height = 4)
+
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c")
+ggsave("./result/fig4/Ez-LOF-Bi-KD.pdf", width = 4, height = 4)
 
 p <- res_tbl |>
   ggplot(aes(x = x_std, y = y_std, color = type)) +
-  geom_point(size = 0.5, alpha = 0.12) +
+  geom_point(size = 0.5, alpha = 1) +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -266,22 +254,22 @@ ttbl |>
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
   sig_annotation(
-    ttbl$anterior / ttbl$total, ttbl$type_n, sig_label, label_offset = 0.16
+    ttbl$anterior / ttbl$total, ttbl$type_n, sig_label, label_offset = 0.2
   ) +
   labs(y = "# Anterior Bi cells\n/ Total (All Bi+ cells)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
-    axis.text = element_text(size = 10),
-    axis.title.y = element_text(size = 10),
-    axis.text.x = element_text(angle = 60, hjust = 1)
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 14)
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   scale_color_manual(
     values = c("#435274", "#ba3c3c")
   ) +
   guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Bi-quant.pdf", width = 3, height = 4)
+ggsave("./result/fig4/Ez-LOF-Bi-quant.pdf", width = 2, height = 4)
 
 ## Ez LOF Vvl radial variance
 res_path <- list.files(
@@ -296,22 +284,11 @@ res_tbl$type <- factor(
   levels = c("mCherry RNAi", "E(z) RNAi")
 )
 
-res_tbl |>
-  ggplot(aes(x = x_std, y = y_std, color = type)) +
-  geom_point_rast(size = 0.5, alpha = 0.12, raster.dpi = 300) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Vvl-scatter.pdf", width = 4, height = 4)
+condition_scatter(res_tbl, "mCherry RNAi", "#435274")
+ggsave("./result/fig4/Ez-LOF-Vvl-Ctrl.pdf", width = 4, height = 4)
+
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c")
+ggsave("./result/fig4/Ez-LOF-Vvl-KD.pdf", width = 4, height = 4)
 
 ttbl <- res_tbl[
   , .(var_r = var(r)), by = c("sample", "type")
@@ -343,22 +320,22 @@ ttbl |>
     fun.data = "mean_se", pch = "-", size = 2
   ) +
   sig_annotation(
-    ttbl$var_r, ttbl$type_n, sig_label, label_offset = 0.3, bar_offset = 0.15
+    ttbl$var_r, ttbl$type_n, sig_label, label_offset = 0.35, bar_offset = 0.15
   ) +
-  labs(y = "Variance on the radial axis") +
+  labs(y = "Variance on\nthe radial axis") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
-    axis.text = element_text(size = 10),
-    axis.title.y = element_text(size = 10),
-    axis.text.x = element_text(angle = 60, hjust = 1)
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 14)
   ) +
   scale_color_manual(
     values = c("#435274", "#ba3c3c")
   ) +
   scale_y_continuous(limits = c(0, NA)) +
   guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Vvl-variance.pdf", width = 3, height = 4)
+ggsave("./result/fig4/Ez-LOF-Vvl-variance.pdf", width = 2, height = 4)
 
 ## Ez LOF Toy radial variance
 res_path <- list.files(
@@ -373,22 +350,11 @@ res_tbl$type <- factor(
   levels = c("mCherry RNAi", "E(z) RNAi")
 )
 
-res_tbl |>
-  ggplot(aes(x = x_std, y = y_std, color = type)) +
-  geom_point_rast(size = 0.5, alpha = 0.12, raster.dpi = 300) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_x_continuous(limits = c(-1, 1)) +
-  scale_y_continuous(limits = c(-1, 1)) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  theme_minimal() +
-  theme(
-    axis.title = element_blank(),
-    axis.text = element_blank()
-  ) +
-  guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Toy-scatter.pdf", width = 4, height = 4)
+condition_scatter(res_tbl, "mCherry RNAi", "#435274")
+ggsave("./result/fig4/Ez-LOF-Toy-Ctrl.pdf", width = 4, height = 4)
+
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c")
+ggsave("./result/fig4/Ez-LOF-Toy-KD.pdf", width = 4, height = 4)
 
 ttbl <- res_tbl[
   , .(var_r = var(r)), by = c("sample", "type")
@@ -420,9 +386,136 @@ ttbl |>
     fun.data = "mean_se", pch = "-", size = 2
   ) +
   sig_annotation(
-    ttbl$var_r, ttbl$type_n, sig_label, label_offset = 0.3, bar_offset = 0.15
+    ttbl$var_r, ttbl$type_n, sig_label, label_offset = 0.32, bar_offset = 0.15
   ) +
-  labs(y = "Variance on the radial axis") +
+  labs(y = "Variance on\nthe radial axis") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 14)
+  ) +
+  scale_color_manual(
+    values = c("#435274", "#ba3c3c")
+  ) +
+  scale_y_continuous(limits = c(0, NA)) +
+  guides(color = "none")
+ggsave("./result/fig4/Ez-LOF-Toy-variance.pdf", width = 2, height = 4)
+
+## Vsx reporter ROI quantification
+res_path <- list.files(
+  "Vsx-reporter/result", full.names = TRUE, pattern = "preprocessed.csv$"
+)
+
+res_tbl <- lapply(res_path, fread) |>
+  rbindlist()
+
+res_tbl[, type := factor(type, levels = c("enh212", "enh3", "enhNB3"))]
+
+# enhNB3 was imaged under a different condition, so it uses a lower Vsx1 cutoff.
+vsx1_cutoffs <- c(enh212 = 600, enh3 = 600, enhNB3 = 400)
+res_tbl[, vsx1_cutoff := vsx1_cutoffs[as.character(type)]]
+res_tbl[, vsx1_pos := int_1 > vsx1_cutoff]
+res_tbl[, vsx1_status := factor(
+  fifelse(vsx1_pos, "Vsx1+", "Vsx1-"),
+  levels = c("Vsx1-", "Vsx1+")
+)]
+res_tbl[, region := fifelse(
+  theta >= -pi / 10 & theta <= pi / 10, "ROI", "Outside"
+)]
+res_tbl[, region := factor(region, levels = c("ROI", "Outside"))]
+
+circular_density <- function(theta, n = 512) {
+  theta <- theta[is.finite(theta)]
+  theta_ext <- c(theta - 2 * pi, theta, theta + 2 * pi)
+  den <- density(theta_ext, from = -pi, to = pi, n = n)
+  data.table(theta = den$x, density = den$y * 3)
+}
+
+theta_density_tbl <- res_tbl[, circular_density(theta), by = type]
+
+theta_density_tbl |>
+  ggplot(aes(x = theta, y = density, color = type)) +
+  geom_line(linewidth = 0.8) +
+  coord_radial(
+    theta = "x", thetalim = c(-pi, pi), expand = FALSE, clip = "off"
+  ) +
+  scale_x_continuous(breaks = NULL) +
+  scale_y_continuous(breaks = NULL) +
+  scale_color_manual(values = c("#435274", "#ba3c3c", "#1B9E77")) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  labs(color = "Reporter")
+ggsave("./result/fig4/Vsx-reporter-theta-density.pdf", width = 4, height = 4)
+
+roi_wedge <- data.table(theta = seq(-pi / 10, pi / 10, length.out = 80))
+roi_wedge <- rbind(
+  data.table(x = 0, y = 0),
+  roi_wedge[, .(x = cos(theta), y = sin(theta))],
+  data.table(x = 0, y = 0)
+)
+roi_z_lim <- res_tbl[region == "ROI", range(z_std, na.rm = TRUE)]
+
+for (reporter_type in levels(res_tbl$type)) {
+  p <- res_tbl[type == reporter_type] |>
+    ggplot(aes(x = x_std, y = y_std)) +
+    geom_polygon(
+      data = roi_wedge, aes(x = x, y = y),
+      inherit.aes = FALSE, fill = NA, color = "black",
+      linewidth = 0.5, linetype = "dashed"
+    ) +
+    geom_point_rast(aes(color = vsx1_status), size = 0.35, alpha = 0.75) +
+    coord_equal(xlim = c(-1, 1), ylim = c(-1, 1)) +
+    scale_color_manual(values = c("Vsx1-" = "grey70", "Vsx1+" = "#1B9E77")) +
+    theme_minimal() +
+    theme(
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom"
+    ) +
+    labs(color = "Vsx1 status")
+  ggsave(
+    sprintf("./result/fig4/Vsx-reporter-%s-scatter.pdf", reporter_type),
+    p, width = 4, height = 4
+  )
+
+  p <- res_tbl[type == reporter_type & region == "ROI"] |>
+    ggplot(aes(x = x_std, y = z_std)) +
+    geom_point_rast(aes(color = vsx1_status), size = 0.35, alpha = 0.75) +
+    coord_cartesian(xlim = c(0, 1), ylim = roi_z_lim) +
+    scale_color_manual(values = c("Vsx1-" = "grey70", "Vsx1+" = "#1B9E77")) +
+    theme_bw() +
+    theme(
+      legend.position = "bottom"
+    ) +
+    labs(color = "Vsx1 status")
+  ggsave(
+    sprintf("./result/fig4/Vsx-reporter-%s-ROI-xz.pdf", reporter_type),
+    p, width = 4, height = 4
+  )
+}
+
+roi_vsx1_quant <- res_tbl[
+  region == "ROI",
+  .(
+    total = .N,
+    vsx1_n = sum(vsx1_pos),
+    vsx1_fraction = mean(vsx1_pos)
+  ),
+  by = c("type", "sample")
+]
+
+fwrite(roi_vsx1_quant, "result/fig4/Vsx-reporter-ROI-Vsx1-fraction.csv")
+
+roi_vsx1_quant |>
+  ggplot(aes(x = type, y = vsx1_fraction, color = type)) +
+  geom_jitter(width = 0.1, height = 0, size = 1) +
+  stat_summary(
+    fun = "mean", geom = "crossbar", width = 0.45, linewidth = 0.3
+  ) +
+  stat_summary(fun.data = "mean_se", geom = "errorbar", width = 0.2) +
+  labs(y = "# Vsx1+ / Total reporter+ cells in ROI") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
@@ -430,11 +523,8 @@ ttbl |>
     axis.title.y = element_text(size = 10),
     axis.text.x = element_text(angle = 60, hjust = 1)
   ) +
-  scale_color_manual(
-    values = c("#435274", "#ba3c3c")
-  ) +
-  scale_y_continuous(limits = c(0, NA)) +
-  guides(color = "none")
-ggsave("./result/fig4/Ez-LOF-Toy-variance.pdf", width = 3, height = 4)
+  scale_color_manual(values = c("#435274", "#ba3c3c", "#1B9E77")) +
+  scale_y_continuous(limits = c(0, NA))
+ggsave("./result/fig4/Vsx-reporter-ROI-Vsx1-fraction.pdf", width = 3, height = 4)
 
 write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
