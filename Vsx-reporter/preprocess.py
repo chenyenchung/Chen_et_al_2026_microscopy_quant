@@ -84,23 +84,23 @@ def standardize(mat, dims=(0, 1)):
 sample_metadata = OrderedDict([
     ('Vsx_enh3_1', {
         'condition': 'enh3',
-        'roi_path': './batch1-enh3/Series001_0.24_cp_masks.tif',
-        'signal_path': './batch1-enh3/Series001_Toy_Vsx1_Ap.tif',
-        'rotation': 120,
+        'roi_path': './batch1-enh3/Series003_0.24_cp_masks.tif',
+        'signal_path': './batch1-enh3/Series003_Toy_Vsx1_Ap.tif',
+        'rotation': -100,
         'verticle_flip': False,
     }),
     ('Vsx_enh3_2', {
         'condition': 'enh3',
-        'roi_path': './batch1-enh3/Series002_0.24_cp_masks.tif',
-        'signal_path': './batch1-enh3/Series002_Toy_Vsx1_Ap.tif',
-        'rotation': -115,
+        'roi_path': './batch1-enh3/Series004_0.24_cp_masks.tif',
+        'signal_path': './batch1-enh3/Series004_Toy_Vsx1_Ap.tif',
+        'rotation': 95,
         'verticle_flip': False,
     }),
     ('Vsx_enh3_3', {
         'condition': 'enh3',
-        'roi_path': './batch1-enh3/Series003_0.24_cp_masks.tif',
-        'signal_path': './batch1-enh3/Series003_Toy_Vsx1_Ap.tif',
-        'rotation': -60,
+        'roi_path': './batch1-enh3/Series005_0.24_cp_masks.tif',
+        'signal_path': './batch1-enh3/Series005_Toy_Vsx1_Ap.tif',
+        'rotation': 85,
         'verticle_flip': False,
     }),
     ('Vsx_enh212_1', {

@@ -51,10 +51,11 @@ sig_annotation <- function(
   )
 }
 
-condition_scatter <- function(tbl, condition, color, raster = TRUE) {
+condition_scatter <- function(
+  tbl, condition, color, raster = TRUE, show_x_zero_line = TRUE
+) {
   p <- tbl[type == condition] |>
     ggplot(aes(x = x_std, y = y_std)) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
     scale_x_continuous(limits = c(-1, 1)) +
     scale_y_continuous(limits = c(-1, 1)) +
     theme_minimal() +
@@ -62,6 +63,10 @@ condition_scatter <- function(tbl, condition, color, raster = TRUE) {
       axis.title = element_blank(),
       axis.text = element_blank()
     )
+
+  if (show_x_zero_line) {
+    p <- p + geom_vline(xintercept = 0, linetype = "dashed")
+  }
 
   if (raster) {
     p + geom_point_rast(color = color, size = 0.5, alpha = 1, raster.dpi = 300)
@@ -284,10 +289,10 @@ res_tbl$type <- factor(
   levels = c("mCherry RNAi", "E(z) RNAi")
 )
 
-condition_scatter(res_tbl, "mCherry RNAi", "#435274")
+condition_scatter(res_tbl, "mCherry RNAi", "#435274", show_x_zero_line = FALSE)
 ggsave("./result/fig4/Ez-LOF-Vvl-Ctrl.pdf", width = 4, height = 4)
 
-condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c")
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c", show_x_zero_line = FALSE)
 ggsave("./result/fig4/Ez-LOF-Vvl-KD.pdf", width = 4, height = 4)
 
 ttbl <- res_tbl[
@@ -350,10 +355,10 @@ res_tbl$type <- factor(
   levels = c("mCherry RNAi", "E(z) RNAi")
 )
 
-condition_scatter(res_tbl, "mCherry RNAi", "#435274")
+condition_scatter(res_tbl, "mCherry RNAi", "#435274", show_x_zero_line = FALSE)
 ggsave("./result/fig4/Ez-LOF-Toy-Ctrl.pdf", width = 4, height = 4)
 
-condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c")
+condition_scatter(res_tbl, "E(z) RNAi", "#ba3c3c", show_x_zero_line = FALSE)
 ggsave("./result/fig4/Ez-LOF-Toy-KD.pdf", width = 4, height = 4)
 
 ttbl <- res_tbl[
@@ -508,13 +513,16 @@ roi_vsx1_quant <- res_tbl[
 
 fwrite(roi_vsx1_quant, "result/fig4/Vsx-reporter-ROI-Vsx1-fraction.csv")
 
-roi_vsx1_quant |>
+roi_vsx1_quant_plot <- roi_vsx1_quant[type %in% c("enh3", "enhNB3")]
+roi_vsx1_quant_plot[, type := factor(type, levels = c("enhNB3", "enh3"))]
+
+roi_vsx1_quant_plot |>
   ggplot(aes(x = type, y = vsx1_fraction, color = type)) +
-  geom_jitter(width = 0.1, height = 0, size = 1) +
+  geom_jitter(width = 0.1, height = 0, size = 1, color = "black") +
   stat_summary(
-    fun = "mean", geom = "crossbar", width = 0.45, linewidth = 0.3
+    fun = "mean", geom = "crossbar", width = 0.45, linewidth = 0.3, color = "black"
   ) +
-  stat_summary(fun.data = "mean_se", geom = "errorbar", width = 0.2) +
+  stat_summary(fun.data = "mean_se", geom = "errorbar", width = 0.2, color = "black") +
   labs(y = "# Vsx1+ / Total reporter+ cells in ROI") +
   theme_classic() +
   theme(
@@ -523,8 +531,8 @@ roi_vsx1_quant |>
     axis.title.y = element_text(size = 10),
     axis.text.x = element_text(angle = 60, hjust = 1)
   ) +
-  scale_color_manual(values = c("#435274", "#ba3c3c", "#1B9E77")) +
+  guides(color = "none") +
   scale_y_continuous(limits = c(0, NA))
-ggsave("./result/fig4/Vsx-reporter-ROI-Vsx1-fraction.pdf", width = 3, height = 4)
+ggsave("./result/fig4/Vsx-reporter-ROI-Vsx1-fraction.pdf", width = 2.1, height = 4)
 
 write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
