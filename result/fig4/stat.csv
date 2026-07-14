@@ -5,3 +5,4 @@
 "Number of anterior Bi cells (E(z) RNAi, neuronal)",0.216911568311819,0.088409475465313,0.105282085861991,4,4,22.2936690032327
 "Variance of normalized distance of Vvl (E(z) RNAi, neuronal)",0.0562562167848242,0.0238079710001052,0.0179809171705947,4,3,NA
 "Variance of normalized distance of Toy (E(z) RNAi, neuronal)",0.744044700017513,0.0146556544850479,0.0155484029758496,3,3,NA
+"Fraction of Vsx1+ among anterior Ap cells (E(z) RNAi, neuronal)",0.239044688362831,0.77007874015748,0.659894657637321,3,3,49.379801897302

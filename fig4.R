@@ -535,4 +535,114 @@ roi_vsx1_quant_plot |>
   scale_y_continuous(limits = c(0, NA))
 ggsave("./result/fig4/Vsx-reporter-ROI-Vsx1-fraction.pdf", width = 2.1, height = 4)
 
+## Ez LOF Ap anterior Vsx1 fraction
+res_path <- list.files(
+  "Ez-LOF-Ap/result", full.names = TRUE, pattern = "preprocessed.csv$"
+)
+
+res_tbl <- lapply(res_path, fread) |>
+  rbindlist()
+
+res_tbl[, type := factor(type, levels = c("mCherry RNAi", "E(z) RNAi"))]
+res_tbl[, vsx1_pos := int_0 > 12500]
+res_tbl[, vsx1_status := factor(
+  fifelse(vsx1_pos, "Vsx1+", "Vsx1-"),
+  levels = c("Vsx1-", "Vsx1+")
+)]
+res_tbl[, anterior := theta >= -pi / 10 & theta <= pi / 10]
+setorder(res_tbl, vsx1_pos)
+
+ap_scatter_files <- c(
+  "mCherry RNAi" = "Ez-LOF-Ap-Ctrl.pdf",
+  "E(z) RNAi" = "Ez-LOF-Ap-KD.pdf"
+)
+
+for (condition in levels(res_tbl$type)) {
+  p <- res_tbl[type == condition] |>
+    ggplot(aes(x = x_std, y = y_std)) +
+    geom_point_rast(
+      aes(color = vsx1_status), size = 0.35, alpha = 0.75, raster.dpi = 300
+    ) +
+    geom_polygon(
+      data = roi_wedge, aes(x = x, y = y),
+      inherit.aes = FALSE, fill = NA, color = "black",
+      linewidth = 0.5, linetype = "dashed"
+    ) +
+    coord_equal(xlim = c(-1, 1), ylim = c(-1, 1)) +
+    scale_color_manual(values = c("Vsx1-" = "grey70", "Vsx1+" = "#1B9E77")) +
+    theme_minimal() +
+    theme(
+      axis.title = element_blank(),
+      axis.text = element_blank(),
+      legend.position = "bottom"
+    ) +
+    labs(color = "Vsx1 status")
+
+  ggsave(
+    file.path("result/fig4", unname(ap_scatter_files[condition])),
+    p, width = 4, height = 4
+  )
+}
+
+ttbl <- res_tbl[
+  anterior == TRUE,
+  .(
+    total = .N,
+    vsx1_n = sum(vsx1_pos),
+    vsx1_fraction = mean(vsx1_pos)
+  ),
+  by = c("sample", "type")
+][
+  , type_n := paste0(type, " (n = ", .N, ")"), by = type
+][
+  , type_n := factor(type_n, levels = rev(unique(type_n)))
+]
+
+tobj <- glm(
+  vsx1_fraction ~ type, data = ttbl, family = quasibinomial,
+  weights = total
+)
+tsobj <- summary(tobj)
+beta0 <- tsobj$coefficients[1, 1]
+beta1 <- tsobj$coefficients[2, 1]
+phi <- tsobj$dispersion
+p0 <- 1 / (1 + exp(-beta0))
+p1 <- 1 / (1 + exp(-beta0 - beta1))
+n <- table(ttbl$type)
+
+stat_tbl[["ap_anterior_vsx1"]] <- data.table(
+  exp = "Fraction of Vsx1+ among anterior Ap cells (E(z) RNAi, neuronal)",
+  pvalue = tsobj$coefficients[2, 4],
+  p0 = p0,
+  p1 = p1,
+  nctrl = unname(n["mCherry RNAi"]),
+  nexp = unname(n["E(z) RNAi"]),
+  phi = phi
+)
+
+sig_label <- p_to_sig(tsobj$coefficients[2, 4])
+
+ttbl |>
+  ggplot(aes(x = type_n, y = vsx1_fraction, color = type_n)) +
+  geom_jitter(width = 0.1, height = 0, size = 1) +
+  stat_summary(
+    fun.data = "mean_se", pch = "-", size = 2
+  ) +
+  sig_annotation(
+    ttbl$vsx1_fraction, ttbl$type_n, sig_label,
+    bar_offset = 0.15, label_offset = 0.35
+  ) +
+  labs(y = "# Vsx1+ / All Ap+ cells\nin anterior ROI") +
+  theme_classic() +
+  theme(
+    axis.title.x = element_blank(),
+    axis.text = element_text(size = 14),
+    axis.title.y = element_text(size = 14),
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 14)
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  scale_color_manual(values = c("#435274", "#ba3c3c")) +
+  guides(color = "none")
+ggsave("./result/fig4/Ez-LOF-Ap-quant.pdf", width = 2, height = 4)
+
 write.csv(rbindlist(stat_tbl), "result/fig4/stat.csv", row.names = FALSE)
