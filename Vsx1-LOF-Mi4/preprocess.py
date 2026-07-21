@@ -89,46 +89,53 @@ def standardize(mat, dims=(0, 1)):
 sample_metadata = OrderedDict([
   ('mChKD_1', {
     'rotation': -95,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/mChi_1_run_0.224_cp_masks.tif',
     'signal_path': 'data/mChi_1_ct_run.tif',
     'condition': 'mCherry RNAi'
   }),
   ('mChKD_2', {
     'rotation': 95,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/mChi_2_run_0.241_cp_masks.tif',
     'signal_path': 'data/mChi_2_ct_run.tif',
     'condition': 'mCherry RNAi'
   }),
   ('mChKD_3', {
     'rotation': -90,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/mChi_3_run_0.241_cp_masks.tif',
     'signal_path': 'data/mChi_3_ct_run.tif',
     'condition': 'mCherry RNAi'
   }),
   ('VsxDKD_1', {
     'rotation': -105,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/VKD_1_run_0.241_cp_masks.tif',
     'signal_path': 'data/VKD_1_ct_run.tif',
     'condition': 'Vsx1/2 RNAi'
   }),
   ('VsxDKD_2', {
     'rotation': -100,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/VKD_2_run_0.241_cp_masks.tif',
     'signal_path': 'data/VKD_2_ct_run.tif',
     'condition': 'Vsx1/2 RNAi'
   }),
   ('VsxDKD_3', {
     'rotation': -85,
-    'thres': 25000,
+    'thres': 22500,
     'roi_path': 'data/VKD_3_run_0.241_cp_masks.tif',
     'signal_path': 'data/VKD_3_ct_run.tif',
     'condition': 'Vsx1/2 RNAi'
   }),
+  ('VsxDKD_4', {
+    'rotation': -75,
+    'thres': 22500,
+    'roi_path': 'data/VKD_4_run_0.241_cp_masks.tif',
+    'signal_path': 'data/VKD_4_ct_run.tif',
+    'condition': 'Vsx1/2 RNAi'
+  })
 ])
 
 for m in sample_metadata:

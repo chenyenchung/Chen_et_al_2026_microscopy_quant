@@ -144,7 +144,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-GOF-Mi4-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  x_std > 0, .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
+  in_plane == TRUE & x_std > 0,
+  .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
@@ -242,7 +243,8 @@ ggplot(aes(x_std, y_std, color = cell)) +
 ggsave("./result/fig3/Vsx1-LOF-Mi4-legend.pdf", get_legend(p))
 
 ttbl <- res_tbl[
-  x_std > 0, .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
+  in_plane == TRUE & x_std > 0,
+  .(total = .N, Pm4 = sum(cell == "Pm4 (Run)")),
   by = c("type", "sample")
 ][, type_n := paste0(type, " (n = ", .N, ")", sep = ""), by = "type"]
 
@@ -391,6 +393,7 @@ res_tbl$cell <- factor(res_tbl$cell, levels = c("Tm5e (Ey/Kn)", "Tm29/33/TmY5a (
 res_tbl[in_plane == TRUE & type == "mCherry RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -407,6 +410,7 @@ ggsave("./result/fig3/Vsx1-LOF-Tm5e-Ctrl.pdf", width = 4, height = 4)
 res_tbl[in_plane == TRUE & type == "Vsx1/2 RNAi"] |>
 ggplot(aes(x_std, y_std, color = cell)) +
   geom_point(size = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -455,7 +459,7 @@ ttbl |>
     fun.data = "mean_se",  pch = "-", size = 2
   ) +
   sig_annotation(ttbl$Tm5e / ttbl$total, ttbl$type_n, sig_label) +
-  labs(y = "# Tm5e (Ey/Kn)\n/ Total (All Ey/Kn+)") +
+  labs(y = "# Anterior Tm5e (Ey/Kn)\n/ Total (All Anterior Ey/Kn+)") +
   theme_classic() +
   theme(
     axis.title.x = element_blank(),
