@@ -1,0 +1,3 @@
+region,test,p_value,control_mean,rnai_mean,n_control,n_rnai
+anterior,Welch Two Sample t-test,0.00700309539347976,3.37580945117135,1.22787909194595,3,3
+posterior,Welch Two Sample t-test,0.574107290848618,0.254363066594826,0.282188218660869,3,3
